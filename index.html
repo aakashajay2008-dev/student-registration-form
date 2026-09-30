@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Registration Portal</title>
+  <meta name="description" content="Sign in and complete your student registration quickly and securely." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --card: #16213e;
+      --border: #2a2a4a;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --accent-glow: rgba(108,99,255,0.35);
+      --text: #e2e2f0;
+      --muted: #8888aa;
+      --success: #22d3a5;
+      --error: #f87171;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .bg-blobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18; animation: float 10s ease-in-out infinite; }
+    .blob-1 { width: 500px; height: 500px; background: #6c63ff; top: -120px; left: -100px; animation-duration: 12s; }
+    .blob-2 { width: 400px; height: 400px; background: #a78bfa; bottom: -100px; right: -80px; animation-duration: 15s; animation-delay: -5s; }
+    .blob-3 { width: 300px; height: 300px; background: #22d3a5; top: 40%; left: 55%; animation-duration: 18s; animation-delay: -9s; }
+    @keyframes float { 0%,100%{transform:translate(0,0)scale(1)} 33%{transform:translate(30px,-30px)scale(1.05)} 66%{transform:translate(-20px,20px)scale(0.95)} }
+
+    header {
+      position: relative; z-index: 10;
+      padding: 24px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .logo-icon svg { width: 18px; height: 18px; fill: white; }
+    .logo-text { font-weight: 700; font-size: 1rem; color: var(--text); }
+
+    #toast {
+      display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; padding: 12px 20px; border-radius: 12px;
+      font-size: 0.875rem; font-weight: 500;
+      animation: slideDown 0.3s ease; white-space: nowrap;
+    }
+    #toast.success { background: rgba(34,211,165,0.15); border: 1px solid var(--success); color: var(--success); display:block; }
+    #toast.error   { background: rgba(248,113,113,0.15); border: 1px solid var(--error);   color: var(--error);   display:block; }
+    @keyframes slideDown { from{opacity:0;transform:translateX(-50%)translateY(-10px)} to{opacity:1;transform:translateX(-50%)translateY(0)} }
+
+    main {
+      position: relative; z-index: 5;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 60px 24px;
+    }
+
+    .hero { max-width: 960px; width: 100%; display: flex; align-items: center; gap: 64px; }
+    .hero-left { flex: 1; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3);
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600; color: var(--accent2);
+      margin-bottom: 24px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .badge::before { content: '●'; font-size: 0.5rem; color: var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    h1 { font-size: clamp(2rem,5vw,3.25rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 20px; }
+    h1 span { background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hero-desc { font-size: 1.05rem; color: var(--muted); line-height: 1.7; margin-bottom: 36px; max-width: 440px; }
+
+    .features { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .features li { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--muted); }
+    .features li::before {
+      content: '✓'; width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(34,211,165,0.15); border: 1px solid rgba(34,211,165,0.4);
+      color: var(--success); display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0;
+    }
+
+    .hero-right { flex-shrink: 0; width: 380px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; padding: 36px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg,var(--accent),var(--accent2),transparent);
+    }
+    .card h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+    .card p  { font-size: 0.875rem; color: var(--muted); margin-bottom: 28px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; padding: 11px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: inherit; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .form-group input::placeholder { color: #44446a; }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+    .divider span { font-size: 0.75rem; color: #44446a; white-space: nowrap; }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .btn {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      font-family: inherit; font-size: 0.925rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg,var(--accent),var(--accent2));
+      color: white; box-shadow: 0 8px 24px rgba(108,99,255,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,99,255,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-google { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+    .btn-google:hover { border-color: #5555aa; background: #1e1e38; }
+
+    .terms { font-size: 0.75rem; color: #44446a; text-align: center; margin-top: 16px; line-height: 1.5; }
+
+    .stats { display: flex; gap: 32px; margin-top: 48px; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    footer {
+      position: relative; z-index: 5;
+      text-align: center; padding: 24px;
+      font-size: 0.75rem; color: #44446a;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .hero { flex-direction: column; gap: 40px; }
+      .hero-right { width: 100%; }
+      header { padding: 16px 20px; }
+      .stats { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+      </div>
+      <span class="logo-text">Student Portal</span>
+    </a>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="hero-left">
+        <div class="badge">Registration Open 2026</div>
+        <h1>Welcome to the<br /><span>Student Registration</span><br />Portal</h1>
+        <p class="hero-desc">
+          Complete your student registration securely. Sign in with your
+          credentials and fill in your details — it only takes a minute.
+        </p>
+        <ul class="features">
+          <li>Secure Google Sign-In authentication</li>
+          <li>Instant registration confirmation</li>
+          <li>Data safely stored in our database</li>
+          <li>Access your details anytime</li>
+        </ul>
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-value">5K+</div>
+            <div class="stat-label">Students Registered</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">120+</div>
+            <div class="stat-label">Colleges</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">99.9%</div>
+            <div class="stat-label">Uptime</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="card">
+          <h2>Sign In</h2>
+          <p>Enter your details to continue</p>
+
+          <div class="form-group">
+            <label for="login-name">Full Name</label>
+            <input type="text" id="login-name" placeholder="Jane Doe" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" placeholder="jane@example.com" autocomplete="email" />
+          </div>
+
+          <button class="btn btn-primary" id="signin-btn" onclick="handleSignIn()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            Continue to Registration
+          </button>
+
+          <div class="divider"><span>or sign in with</span></div>
+
+          <button class="btn btn-google" onclick="handleGoogleSignIn()">
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+            </svg>
+            Sign in with Google
+          </button>
+
+          <p class="terms">By continuing you agree to submit your student details for registration.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; <span id="year"></span> Student Registration Portal &nbsp;·&nbsp; All rights reserved
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = type;
+      setTimeout(() => { toast.className = ""; toast.style.display = "none"; }, 4000);
+    }
+
+    function handleSignIn() {
+      const name  = document.getElementById("login-name").value.trim();
+      const email = document.getElementById("login-email").value.trim();
+      if (!name)  { showToast("Please enter your full name.", "error"); return; }
+      if (!email) { showToast("Please enter your email address.", "error"); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("Please enter a valid email address.", "error"); return;
+      }
+      const user = { uid: email, email, name, picture: "" };
+      const token = btoa(unescape(encodeURIComponent(JSON.stringify(user))));
+      sessionStorage.setItem("demo_user", JSON.stringify(user));
+      sessionStorage.setItem("demo_token", token);
+      window.location.href = "form.html";
+    }
+
+    function handleGoogleSignIn() {
+      document.getElementById("login-name").value  = "Demo Google User";
+      document.getElementById("login-email").value = "demo.google@gmail.com";
+      showToast("Google demo user prefilled — click Continue!", "success");
+    }
+
+    if (sessionStorage.getItem("demo_user")) {
+      window.location.href = "form.html";
+    }
+
+    document.addEventListener("keydown", e => { if (e.key === "Enter") handleSignIn(); });
+  </script>
+</body>
+</html>
