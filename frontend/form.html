@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Details | Student Registration Portal</title>
+  <meta name="description" content="Fill in your student details to complete registration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --card: #16213e;
+      --border: #2a2a4a;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --accent-glow: rgba(108,99,255,0.35);
+      --text: #e2e2f0;
+      --muted: #8888aa;
+      --success: #22d3a5;
+      --error: #f87171;
+      --warning: #fbbf24;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Background blobs */
+    .bg-blobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.13; animation: float 12s ease-in-out infinite; }
+    .blob-1 { width: 500px; height: 500px; background: #6c63ff; top: -100px; right: -100px; animation-duration: 14s; }
+    .blob-2 { width: 350px; height: 350px; background: #22d3a5; bottom: -80px; left: -60px; animation-duration: 18s; animation-delay: -7s; }
+    @keyframes float { 0%,100%{transform:translate(0,0)scale(1)} 50%{transform:translate(20px,-20px)scale(1.04)} }
+
+    /* Header */
+    header {
+      position: relative; z-index: 10;
+      padding: 20px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .logo-icon svg { width: 18px; height: 18px; fill: white; }
+    .logo-text { font-weight: 700; font-size: 1rem; }
+
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.875rem; color: white; flex-shrink: 0;
+    }
+    #user-name-display { font-size: 0.875rem; color: var(--muted); }
+    #signout-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 6px 14px; border-radius: 8px;
+      font-family: inherit; font-size: 0.8rem; cursor: pointer;
+      transition: all 0.2s;
+    }
+    #signout-btn:hover { border-color: var(--error); color: var(--error); }
+
+    /* Toast */
+    #toast {
+      display: none;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      padding: 14px 20px; border-radius: 12px;
+      font-size: 0.875rem; font-weight: 500;
+      display: none; align-items: center; justify-content: space-between; gap: 16px;
+      min-width: 280px;
+      animation: slideDown 0.3s ease;
+    }
+    #toast.visible { display: flex; }
+    #toast.success { background: rgba(34,211,165,0.1); border: 1px solid rgba(34,211,165,0.4); color: var(--success); }
+    #toast.error   { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.4); color: var(--error);   }
+    #toast-close { background: none; border: none; color: inherit; cursor: pointer; font-size: 1.1rem; opacity: 0.7; }
+    #toast-close:hover { opacity: 1; }
+    @keyframes slideDown { from{opacity:0;transform:translateX(-50%)translateY(-10px)} to{opacity:1;transform:translateX(-50%)translateY(0)} }
+
+    /* Main */
+    main {
+      position: relative; z-index: 5;
+      flex: 1; display: flex; align-items: flex-start; justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .content-wrapper { max-width: 860px; width: 100%; display: flex; gap: 40px; align-items: flex-start; }
+
+    /* Sidebar steps */
+    .sidebar { width: 240px; flex-shrink: 0; }
+    .sidebar h3 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 20px; }
+    .steps { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 10px;
+      font-size: 0.875rem; color: var(--muted);
+      transition: all 0.2s;
+    }
+    .step.active { background: rgba(108,99,255,0.1); color: var(--text); }
+    .step.done   { color: var(--success); }
+    .step-dot {
+      width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+    }
+    .step.active .step-dot { border-color: var(--accent); background: rgba(108,99,255,0.2); color: var(--accent); }
+    .step.done   .step-dot { border-color: var(--success); background: rgba(34,211,165,0.15); color: var(--success); }
+
+    /* Card / Form */
+    .card {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+    }
+
+    .card-header { margin-bottom: 28px; }
+    .card-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+    .card-header p  { font-size: 0.875rem; color: var(--muted); }
+
+    /* Success state */
+    #success-state {
+      display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px 0;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .success-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(34,211,165,0.15); border: 2px solid rgba(34,211,165,0.4);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 2rem;
+    }
+    #success-state h2 { font-size: 1.5rem; font-weight: 700; color: var(--success); margin-bottom: 10px; }
+    #success-state p  { color: var(--muted); font-size: 0.925rem; line-height: 1.6; max-width: 340px; }
+
+    /* Form fields */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.8rem; font-weight: 500; color: var(--muted);
+      display: flex; align-items: center; gap: 4px;
+    }
+    label .required { color: var(--error); }
+
+    input[type="text"], input[type="email"] {
+      padding: 11px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: inherit; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder { color: #44446a; }
+    input.error-field { border-color: var(--error); }
+
+    .field-hint { font-size: 0.75rem; color: #44446a; }
+
+    #form-error {
+      display: none;
+      padding: 12px 14px; border-radius: 10px;
+      background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3);
+      color: var(--error); font-size: 0.875rem;
+      grid-column: 1 / -1;
+    }
+    #form-error.visible { display: block; }
+
+    .form-actions { margin-top: 28px; display: flex; gap: 12px; }
+
+    .btn {
+      padding: 13px 24px; border-radius: 12px; border: none;
+      font-family: inherit; font-size: 0.925rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary {
+      flex: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; box-shadow: 0 8px 24px rgba(108,99,255,0.35);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,99,255,0.5); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); padding: 13px 20px;
+    }
+    .btn-secondary:hover { border-color: #5555aa; color: var(--text); }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      position: relative; z-index: 5;
+      text-align: center; padding: 20px;
+      font-size: 0.75rem; color: #44446a;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .content-wrapper { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .steps { flex-direction: row; flex-wrap: wrap; }
+      .form-grid { grid-template-columns: 1fr; }
+      header { padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div id="toast">
+    <span id="toast-message"></span>
+    <button id="toast-close" aria-label="Close">&times;</button>
+  </div>
+
+  <header>
+    <a class="logo" href="index.html">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+      </div>
+      <span class="logo-text">Student Portal</span>
+    </a>
+    <div class="user-info">
+      <div class="avatar" id="user-avatar-initials">?</div>
+      <span id="user-name-display"></span>
+      <button id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="content-wrapper">
+
+      <aside class="sidebar">
+        <h3>Registration Steps</h3>
+        <ul class="steps">
+          <li class="step done">
+            <div class="step-dot">✓</div>
+            <span>Sign In</span>
+          </li>
+          <li class="step active" id="step-details">
+            <div class="step-dot">2</div>
+            <span>Student Details</span>
+          </li>
+          <li class="step" id="step-confirm">
+            <div class="step-dot">3</div>
+            <span>Confirmation</span>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="card">
+        <div class="card-header">
+          <h1>Student Details</h1>
+          <p>Please fill in your details to complete registration.</p>
+        </div>
+
+        <!-- Success state -->
+        <div id="success-state">
+          <div class="success-icon">🎉</div>
+          <h2>Registration Complete!</h2>
+          <p>Your details have been successfully submitted. You're now registered in our system.</p>
+        </div>
+
+        <!-- Form -->
+        <form id="student-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="studentName">Student Name <span class="required">*</span></label>
+              <input type="text" id="studentName" name="studentName" placeholder="Jane Doe" autocomplete="name" required />
+            </div>
+
+            <div class="form-group">
+              <label for="collegeName">College Name <span class="required">*</span></label>
+              <input type="text" id="collegeName" name="collegeName" placeholder="Example Institute of Technology" required />
+            </div>
+
+            <div class="form-group">
+              <label for="regNo">Registration Number <span class="required">*</span></label>
+              <input type="text" id="regNo" name="regNo" placeholder="REG2026-0042" required />
+              <span class="field-hint">Your unique college registration number</span>
+            </div>
+
+            <div class="form-group">
+              <label for="collegeId">College ID Number <span class="required">*</span></label>
+              <input type="text" id="collegeId" name="collegeId" placeholder="ID card number" required />
+              <span class="field-hint">Number shown on your college ID card</span>
+            </div>
+
+            <div id="form-error"></div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">
+              ← Back
+            </button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+              Submit Registration
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    &copy; <span id="year"></span> Student Registration Portal &nbsp;·&nbsp; All rights reserved
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const API_BASE_URL = window.location.origin; // same origin as backend serves frontend
+
+    // ── Auth check ────────────────────────────────────────────────────────────
+    const userData  = sessionStorage.getItem("demo_user");
+    const demoToken = sessionStorage.getItem("demo_token");
+
+    if (!userData || !demoToken) {
+      window.location.href = "index.html";
+    }
+
+    const user = JSON.parse(userData);
+
+    // Populate header
+    document.getElementById("user-name-display").textContent = user.name || user.email || "";
+    const initials = (user.name || user.email || "?")
+      .split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+    document.getElementById("user-avatar-initials").textContent = initials;
+
+    // Sign out
+    document.getElementById("signout-btn").addEventListener("click", () => {
+      sessionStorage.removeItem("demo_user");
+      sessionStorage.removeItem("demo_token");
+      window.location.href = "index.html";
+    });
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-message").textContent = message;
+      toast.className = "visible " + type;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.className = "", 5000);
+    }
+    document.getElementById("toast-close").addEventListener("click", () => {
+      document.getElementById("toast").className = "";
+    });
+
+    // ── Form submit ───────────────────────────────────────────────────────────
+    const form      = document.getElementById("student-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const formError = document.getElementById("form-error");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formError.className = "";
+
+      const payload = {
+        studentName: document.getElementById("studentName").value.trim(),
+        collegeName:  document.getElementById("collegeName").value.trim(),
+        regNo:        document.getElementById("regNo").value.trim(),
+        collegeId:    document.getElementById("collegeId").value.trim(),
+      };
+
+      // Simple client-side validation
+      for (const [key, val] of Object.entries(payload)) {
+        if (!val) {
+          showToast("Please fill in all required fields.", "error");
+          return;
+        }
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="spinner"></div> Submitting…';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/students`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${demoToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Submission failed. Please try again.");
+        }
+
+        // Show success
+        form.style.display = "none";
+        const successEl = document.getElementById("success-state");
+        successEl.style.display = "flex";
+
+        // Update steps
+        document.getElementById("step-details").className = "step done";
+        document.getElementById("step-details").querySelector(".step-dot").textContent = "✓";
+        document.getElementById("step-confirm").className = "step active";
+
+        showToast("🎉 Registration submitted successfully!", "success");
+
+      } catch (err) {
+        console.error(err);
+        formError.textContent = err.message;
+        formError.className = "visible";
+        showToast(err.message || "Something went wrong.", "error");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "Submit Registration";
+      }
+    });
+  </script>
+</body>
+</html>

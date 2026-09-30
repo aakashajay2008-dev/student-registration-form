@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contains secrets — never commit)
+.env
+backend/.env
+
+# Firebase service account key (secret)
+serviceAccountKey.json
+backend/serviceAccountKey.json
+
+# Local JSON database (runtime data, not source code)
+db.json
+backend/db.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
